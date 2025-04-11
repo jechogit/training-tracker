@@ -38,28 +38,63 @@ def setup_google_sheets():
     scope = ['https://spreadsheets.google.com/feeds',
              'https://www.googleapis.com/auth/drive']
     try:
+        st.write("🔍 Checking credentials...")
         # Get credentials from Streamlit secrets
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(st.secrets["GOOGLE_SHEETS_CREDENTIALS"]), scope)
+        if "GOOGLE_SHEETS_CREDENTIALS" in st.secrets:
+            st.write("📝 Found credentials in st.secrets")
+            creds_dict = dict(st.secrets["GOOGLE_SHEETS_CREDENTIALS"])
+        else:
+            st.write("🔍 Checking environment variables...")
+            # Try to get credentials from environment variable (for cloud deployment)
+            creds_json = os.environ.get("GOOGLE_SHEETS_CREDENTIALS")
+            if not creds_json:
+                raise Exception("Google Sheets credentials not found in secrets or environment variables")
+            st.write("📝 Found credentials in environment variables")
+            creds_dict = json.loads(creds_json)
+        
+        st.write("🔑 Creating credentials object...")
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        
+        st.write("🔐 Authorizing client...")
         client = gspread.authorize(creds)
-        # Open the spreadsheet by ID from secrets
-        spreadsheet = client.open_by_key(st.secrets["GOOGLE_SHEETS_CREDENTIALS"]["spreadsheet_id"])
+        
+        # Get spreadsheet ID
+        st.write("🔍 Getting spreadsheet ID...")
+        if "GOOGLE_SHEETS_CREDENTIALS" in st.secrets and "spreadsheet_id" in st.secrets["GOOGLE_SHEETS_CREDENTIALS"]:
+            spreadsheet_id = st.secrets["GOOGLE_SHEETS_CREDENTIALS"]["spreadsheet_id"]
+            st.write(f"📄 Found spreadsheet ID in secrets: {spreadsheet_id}")
+        else:
+            # Try to get spreadsheet ID from environment variable (for cloud deployment)
+            spreadsheet_id = os.environ.get("SPREADSHEET_ID")
+            if not spreadsheet_id:
+                raise Exception("Spreadsheet ID not found in secrets or environment variables")
+            st.write(f"📄 Found spreadsheet ID in environment variables: {spreadsheet_id}")
+        
+        st.write("🔗 Opening spreadsheet...")
+        # Open the spreadsheet by ID
+        spreadsheet = client.open_by_key(spreadsheet_id)
+        st.write("✅ Successfully connected to Google Sheets!")
         return spreadsheet
     except Exception as e:
-        st.error(f"Error connecting to Google Sheets: {str(e)}")
+        st.error(f"❌ Error connecting to Google Sheets: {str(e)}")
         st.error("Please check your Streamlit secrets configuration")
         return None
 
 def load_training_data():
     """Load training data from Google Sheets"""
     try:
+        st.write("📥 Loading training data...")
         spreadsheet = setup_google_sheets()
         if spreadsheet:
+            st.write("📋 Getting worksheet...")
             worksheet = spreadsheet.sheet1
+            st.write("📊 Fetching records...")
             data = worksheet.get_all_records()
+            st.write("✅ Data loaded successfully!")
             return pd.DataFrame(data)
         return pd.DataFrame()
     except Exception as e:
-        st.error(f"Error loading training data: {str(e)}")
+        st.error(f"❌ Error loading training data: {str(e)}")
         return pd.DataFrame()
 
 def save_training_data(data: pd.DataFrame):
