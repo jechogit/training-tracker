@@ -27,9 +27,6 @@ MUSCLE_GROUPS = {
     "plank": "core"
 }
 
-# Google Sheets configuration
-SPREADSHEET_ID = "YOUR_SPREADSHEET_ID"  # Replace with your spreadsheet ID from the URL
-
 # Initialize session state
 if 'training_history' not in st.session_state:
     st.session_state.training_history = pd.DataFrame(columns=[
@@ -42,11 +39,10 @@ def setup_google_sheets():
              'https://www.googleapis.com/auth/drive']
     try:
         # Get credentials from Streamlit secrets
-        creds_dict = st.secrets["GOOGLE_SHEETS_CREDENTIALS"]
-        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(dict(st.secrets["GOOGLE_SHEETS_CREDENTIALS"]), scope)
         client = gspread.authorize(creds)
         # Open the spreadsheet by ID from secrets
-        spreadsheet = client.open_by_key(st.secrets["SPREADSHEET_ID"])
+        spreadsheet = client.open_by_key(st.secrets["GOOGLE_SHEETS_CREDENTIALS"]["spreadsheet_id"])
         return spreadsheet
     except Exception as e:
         st.error(f"Error connecting to Google Sheets: {str(e)}")
