@@ -7,6 +7,8 @@ from oauth2client.service_account import ServiceAccountCredentials
 import plotly.express as px
 import plotly.graph_objects as go
 from typing import Dict, List, Tuple, Optional
+import json
+import os
 
 # Page config
 st.set_page_config(
@@ -35,14 +37,16 @@ if 'training_history' not in st.session_state:
     ])
 
 def setup_google_sheets():
-    """Initialize Google Sheets connection"""
+    """Initialize Google Sheets connection using Streamlit secrets"""
     scope = ['https://spreadsheets.google.com/feeds',
              'https://www.googleapis.com/auth/drive']
     try:
-        creds = ServiceAccountCredentials.from_json_keyfile_name('credentials.json', scope)
+        # Get credentials from Streamlit secrets
+        creds_dict = json.loads(st.secrets["GOOGLE_SHEETS_CREDENTIALS"])
+        creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         client = gspread.authorize(creds)
-        # Open the spreadsheet by ID
-        spreadsheet = client.open_by_key("1x2rkbt5bdLn0sFRnLqPPiWTvJDeTb3Iftp4zDxnctEE")
+        # Open the spreadsheet by ID from secrets
+        spreadsheet = client.open_by_key(st.secrets["SPREADSHEET_ID"])
         return spreadsheet
     except Exception as e:
         st.error(f"Error connecting to Google Sheets: {e}")

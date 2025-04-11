@@ -10,7 +10,18 @@ A Streamlit application that helps you track and optimize your training routine.
 - Displays a heatmap visualization of your training history
 - Stores training data in Google Sheets
 
-## Setup
+## Deployment on Streamlit Cloud
+
+1. Fork this repository to your GitHub account
+2. Go to [Streamlit Cloud](https://streamlit.io/cloud)
+3. Click "New app"
+4. Select your forked repository
+5. Set the following secrets in Streamlit Cloud:
+   - `GOOGLE_SHEETS_CREDENTIALS`: The entire content of your Google Sheets credentials JSON file
+   - `SPREADSHEET_ID`: Your Google Sheets spreadsheet ID
+6. Click "Deploy"
+
+## Local Development
 
 1. Clone this repository
 2. Install the required dependencies:
@@ -18,53 +29,24 @@ A Streamlit application that helps you track and optimize your training routine.
    pip install -r requirements.txt
    ```
 
-3. Set up Google Sheets integration:
-
-   ### Step 1: Create a Google Cloud Project
-   1. Go to the [Google Cloud Console](https://console.cloud.google.com/)
-   2. Click on the project dropdown at the top of the page
-   3. Click "New Project"
-   4. Enter a name for your project and click "Create"
-
-   ### Step 2: Enable the Google Sheets API
-   1. In your new project, go to "APIs & Services" > "Library"
-   2. Search for "Google Sheets API"
-   3. Click on it and then click "Enable"
-
-   ### Step 3: Create a Service Account
-   1. Go to "IAM & Admin" > "Service Accounts"
-   2. Click "Create Service Account"
-   3. Enter a name for the service account (e.g., "training-tracker")
-   4. Click "Create and Continue"
-   5. For Role, select "Project" > "Editor"
-   6. Click "Continue" and then "Done"
-
-   ### Step 4: Create and Download Credentials
-   1. Find your new service account in the list
-   2. Click on the three dots menu (⋮) on the right
-   3. Select "Manage keys"
-   4. Click "Add Key" > "Create new key"
-   5. Choose "JSON" format
-   6. Click "Create" - this will download a JSON file
-
-   ### Step 5: Set Up the Credentials File
-   1. Rename the downloaded JSON file to `credentials.json`
-   2. Place it in the root directory of this project
-   3. Make sure the file is listed in `.gitignore` to prevent accidental commits
-
-   ### Step 6: Create and Share a Google Sheet
-   1. Go to [Google Sheets](https://sheets.google.com)
-   2. Create a new spreadsheet
-   3. Click the "Share" button in the top right
-   4. Add the service account email (found in the `client_email` field of your credentials.json)
-   5. Give it "Editor" access
-   6. Copy the spreadsheet ID from the URL:
-      - Open your Google Sheet
-      - Look at the URL in your browser
-      - The URL will look like: `https://docs.google.com/spreadsheets/d/SPREADSHEET_ID/edit`
-      - Copy the long string of characters between `/d/` and `/edit`
-      - This is your spreadsheet ID
-   7. Open `app.py` and replace `YOUR_SPREADSHEET_ID` with the ID you copied
+3. Create a `.streamlit/secrets.toml` file with your credentials:
+   ```toml
+   GOOGLE_SHEETS_CREDENTIALS = '''
+   {
+     "type": "service_account",
+     "project_id": "your-project-id",
+     "private_key_id": "your-private-key-id",
+     "private_key": "your-private-key",
+     "client_email": "your-service-account-email",
+     "client_id": "your-client-id",
+     "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+     "token_uri": "https://oauth2.googleapis.com/token",
+     "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+     "client_x509_cert_url": "your-cert-url"
+   }
+   '''
+   SPREADSHEET_ID = "your-spreadsheet-id"
+   ```
 
 4. Run the app:
    ```bash
