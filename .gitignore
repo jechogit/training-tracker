@@ -38,7 +38,7 @@ credentials.json
 .env.local
 
 # Streamlit
-.streamlit/
+.streamlit/secrets.toml
 
 # OS
 .DS_Store

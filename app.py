@@ -42,7 +42,7 @@ def setup_google_sheets():
              'https://www.googleapis.com/auth/drive']
     try:
         # Get credentials from Streamlit secrets
-        creds_dict = json.loads(st.secrets["GOOGLE_SHEETS_CREDENTIALS"])
+        creds_dict = st.secrets["GOOGLE_SHEETS_CREDENTIALS"]
         creds = ServiceAccountCredentials.from_json_keyfile_dict(creds_dict, scope)
         client = gspread.authorize(creds)
         # Open the spreadsheet by ID from secrets
