@@ -49,8 +49,41 @@ def setup_google_sheets():
         spreadsheet = client.open_by_key(st.secrets["SPREADSHEET_ID"])
         return spreadsheet
     except Exception as e:
-        st.error(f"Error connecting to Google Sheets: {e}")
+        st.error(f"Error connecting to Google Sheets: {str(e)}")
+        st.error("Please check your Streamlit secrets configuration")
         return None
+
+def load_training_data():
+    """Load training data from Google Sheets"""
+    try:
+        spreadsheet = setup_google_sheets()
+        if spreadsheet:
+            worksheet = spreadsheet.sheet1
+            data = worksheet.get_all_records()
+            return pd.DataFrame(data)
+        return pd.DataFrame()
+    except Exception as e:
+        st.error(f"Error loading training data: {str(e)}")
+        return pd.DataFrame()
+
+def save_training_data(data: pd.DataFrame):
+    """Save training data to Google Sheets"""
+    try:
+        spreadsheet = setup_google_sheets()
+        if spreadsheet:
+            worksheet = spreadsheet.sheet1
+            # Clear existing data
+            worksheet.clear()
+            # Add headers
+            worksheet.append_row(data.columns.tolist())
+            # Add data
+            for _, row in data.iterrows():
+                worksheet.append_row(row.tolist())
+            return True
+        return False
+    except Exception as e:
+        st.error(f"Error saving training data: {str(e)}")
+        return False
 
 def load_training_progression():
     """Load the training progression table"""
@@ -144,6 +177,11 @@ def create_heatmap():
 def main():
     st.title("🏋️ Training Tracker")
     
+    # Load training data from Google Sheets
+    training_data = load_training_data()
+    if not training_data.empty:
+        st.session_state.training_history = training_data
+    
     # Load training progression table
     progression_table = load_training_progression()
     
@@ -170,6 +208,13 @@ def main():
     # Display training progression table
     st.header("Training Progression")
     st.dataframe(progression_table)
+    
+    # Save data if there are changes
+    if not training_data.equals(st.session_state.training_history):
+        if save_training_data(st.session_state.training_history):
+            st.success("Training data saved successfully!")
+        else:
+            st.error("Failed to save training data")
 
 if __name__ == "__main__":
     main()
